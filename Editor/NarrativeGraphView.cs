@@ -8,6 +8,7 @@ public class NarrativeGraphView : GraphView
 {
     public NarrativeGraphView()
     {
+        styleSheets.Add(Resources.Load<StyleSheet>("NarrativeGraph"));
         SetupZoom(ContentZoomer.DefaultMinScale, ContentZoomer.DefaultMaxScale);
 
         this.AddManipulator(new ContentDragger());
@@ -17,16 +18,10 @@ public class NarrativeGraphView : GraphView
         // this.AddManipulator(new ContentZoomer());
 
         var grid = new GridBackground();
-        var background = new VisualElement
-        {
-            style =
-            {
-                backgroundColor = new Color(0.17f, 0.17f, 0.17f, 1f)
-            }
-        };
 
-        Insert(0, background);
-        background.StretchToParentSize();
+
+        Insert(0, grid);
+        grid.StretchToParentSize();
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)

@@ -43,9 +43,9 @@ public class NarrativeGraph : EditorWindow
         };
 
         toolbar.Add(options);
-        toolbar.Add(new Button(GetNodeData)
+        toolbar.Add(new Button(()=>DataParser.SaveNodes(currentInstance.edges.ToList()))
         {
-            text = "Print Node Data",
+            text = "Save Data",
         });
         toolbar.Add(new Button(()=>
         {
@@ -58,14 +58,14 @@ public class NarrativeGraph : EditorWindow
         });
         rootVisualElement.Add(toolbar);
         //rootVisualElement.Add(group);
-        var node = CreateNode("Once upon a time...");
-        node.capabilities &= ~Capabilities.Movable;
-        node.capabilities &= ~Capabilities.Deletable;
+        var node = CreateEntryPointNode();
+
         //node.SetPosition(new Rect(0, 0, 0, 0));
 //        var node2 = CreateNode("There is a weird guy");
 //        var node3 = CreateNode("Called Mert");
         //node.RemoveFromHierarchy();
         currentInstance.AddElement(node);
+        DataParser.SetEntryPoint(node);
 //
 //        currentInstance.AddElement(node2);
 //        currentInstance.AddElement(node3);
@@ -95,12 +95,13 @@ public class NarrativeGraph : EditorWindow
 //        var minimap = new MiniMap();
 //        minimap.SetPosition(new Rect(0, 0, 100, 100));
 //        currentInstance.Add(minimap);
+
     }
 
     public void GetNodeData()
     {
         currentInstance.edges.ForEach(x => { Debug.Log("Input:" + x.input?.node.title + " |Output:" + x.output?.node.title); });
-//        currentInstance.nodes.ForEach(x => { Debug.Log(x.title);});
+     //currentInstance.nodes.ForEach(x => { Debug.Log(x.title);});
     }
     
     private void OnDisable()
@@ -133,6 +134,30 @@ public class NarrativeGraph : EditorWindow
         nodeCache.inputContainer.Add(realPort2);
 
 
+        nodeCache.RefreshExpandedState();
+        nodeCache.RefreshPorts();
+        return nodeCache;
+    }
+
+    private Node CreateEntryPointNode()
+    {
+        var nodeCache = new CanvasNode()
+        {
+            title = "START"
+        };
+
+        // nodeCache.extensionContainer.style.backgroundColor = new Color(0.24f, 0.24f, 0.24f, 0.8f);
+//InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
+        var edgeListener = new EdgeConnectionListener(this);
+        PortSocket realPort =
+            nodeCache.AddPort(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(float),
+                edgeListener);
+        realPort.portName = "Next";
+        nodeCache.outputContainer.Add(realPort);
+
+        nodeCache.capabilities &= ~Capabilities.Movable;
+        nodeCache.capabilities &= ~Capabilities.Deletable;
+        
         nodeCache.RefreshExpandedState();
         nodeCache.RefreshPorts();
         return nodeCache;

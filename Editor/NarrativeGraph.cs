@@ -113,33 +113,55 @@ public class NarrativeGraph : EditorWindow
     {
         var nodeCache = new CanvasNode()
         {
-            title = nodeName
+            title = nodeName,
+            DialogueText = nodeName,
+            GUID = Guid.NewGuid().ToString()
         };
-
         nodeCache.mainContainer.Add(new Label(nodeName));
         // nodeCache.extensionContainer.style.backgroundColor = new Color(0.24f, 0.24f, 0.24f, 0.8f);
 //InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-        var edgeListener = new EdgeConnectionListener(this);
-        PortSocket realPort =
-            nodeCache.AddPort(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(float),
-                edgeListener);
-        realPort.portName = "Next";
-        nodeCache.outputContainer.Add(realPort);
+        AddPort(nodeCache);
 
-        edgeListener = new EdgeConnectionListener(this);
+       var edgeListener = new EdgeConnectionListener(this);
         PortSocket realPort2 =
             nodeCache.AddPort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(float),
                 edgeListener);
         realPort2.portName = "Input";
         nodeCache.inputContainer.Add(realPort2);
 
-
         nodeCache.RefreshExpandedState();
         nodeCache.RefreshPorts();
+        
+        var button = new Button(() =>
+        {
+            AddPort(nodeCache);
+        })
+        {
+            text = "New Branch"
+        };
+        nodeCache.Add(button);
+        
+        var textField = new TextField(nodeCache.title);
+        textField.RegisterValueChangedCallback(evt => { nodeCache.DialogueText = evt.newValue;});
+        nodeCache.Add(textField);
+
+        
         return nodeCache;
     }
 
-    private Node CreateEntryPointNode()
+    private void AddPort(CanvasNode nodeCache)
+    {
+        var edgeConnectionListener = new EdgeConnectionListener(this);
+        PortSocket realPort3 =
+            nodeCache.AddPort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float),
+                edgeConnectionListener);
+        realPort3.portName = "Output";
+        nodeCache.outputContainer.Add(realPort3);
+        nodeCache.RefreshPorts();
+        nodeCache.RefreshExpandedState();
+    }
+    
+    private CanvasNode CreateEntryPointNode()
     {
         var nodeCache = new CanvasNode()
         {
@@ -150,7 +172,7 @@ public class NarrativeGraph : EditorWindow
 //InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
         var edgeListener = new EdgeConnectionListener(this);
         PortSocket realPort =
-            nodeCache.AddPort(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(float),
+            nodeCache.AddPort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float),
                 edgeListener);
         realPort.portName = "Next";
         nodeCache.outputContainer.Add(realPort);

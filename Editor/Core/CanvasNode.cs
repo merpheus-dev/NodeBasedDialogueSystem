@@ -15,6 +15,7 @@ public class CanvasNode : Node
         EdgeConnectionListener connectionListener)
     {
         var socket = new PortSocket(portOrientation, portDirection, portCapacity, type, connectionListener);
+        socket.EmptyLabel();
         return socket;
     }
 }

@@ -84,7 +84,7 @@ public class NarrativeGraph : EditorWindow
         });
         toolbar.Add(new Button(() =>
         {
-            var _node = CreateNode("StoryLine");
+            var _node = CreateNode("Story Line", true);
             currentInstance.AddElement(_node);
             _node.RefreshPorts();
         })
@@ -168,12 +168,12 @@ public class NarrativeGraph : EditorWindow
 
         foreach (var perNode in narrativeObject.NarrativeTextData)
         {
-            var tempNode = CreateNode(perNode.DialogueText,true);
+            var tempNode = CreateNode(perNode.DialogueText, true);
             tempNode.GUID = perNode.NodeGUID;
             currentInstance.AddElement(tempNode);
 
             var nodePorts = narrativeObject.NarrativeData.Where(x => x.BaseNodeGUID == perNode.NodeGUID).ToList();
-            nodePorts.ForEach(x=>AddPort(tempNode,x.PortName));
+            nodePorts.ForEach(x => AddPort(tempNode, x.PortName));
             tempNode.RefreshPorts();
         }
 
@@ -192,15 +192,18 @@ public class NarrativeGraph : EditorWindow
                 var targetNode = nodeList.First(x => x.GUID == targetNodeGUID);
                 var tempEdge = new Edge()
                 {
-                    output = perNode.outputContainer[l] as Port,
+                    output = perNode.outputContainer[l].Q<Port>() as Port,
                     input = targetNode.inputContainer[0] as Port
                 };
                 tempEdge?.input.Connect(tempEdge);
                 tempEdge?.output.Connect(tempEdge);
                 currentInstance.Add(tempEdge);
-                targetNode.SetPosition(new Rect(narrativeObject.NarrativeTextData.First(x=>x.NodeGUID==targetNodeGUID).Position, defaultNodeSize));
+                targetNode.SetPosition(new Rect(
+                    narrativeObject.NarrativeTextData.First(x => x.NodeGUID == targetNodeGUID).Position,
+                    defaultNodeSize));
                 l++;
             }
+
             k++;
 //            if (perNode.EntyPoint)
 //            {
@@ -250,7 +253,7 @@ public class NarrativeGraph : EditorWindow
             DialogueText = nodeName,
             GUID = Guid.NewGuid().ToString()
         };
-        nodeCache.mainContainer.Add(new Label(nodeName));
+        //nodeCache.mainContainer.Add(new Label(nodeName));
         // nodeCache.extensionContainer.style.backgroundColor = new Color(0.24f, 0.24f, 0.24f, 0.8f);
 //InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
         if (!load)
@@ -267,17 +270,21 @@ public class NarrativeGraph : EditorWindow
         nodeCache.RefreshPorts();
         nodeCache.SetPosition(new Rect(Vector2.zero, defaultNodeSize));
 
+
+        var textField = new TextField("");
+        textField.RegisterValueChangedCallback(evt =>
+        {
+            nodeCache.DialogueText = evt.newValue;
+            nodeCache.title = evt.newValue;
+        });
+        textField.SetValueWithoutNotify(nodeCache.title);
+        nodeCache.mainContainer.Add(textField);
+
         var button = new Button(() => { AddPort(nodeCache); })
         {
             text = "New Branch"
         };
-        nodeCache.Add(button);
-
-        var textField = new TextField(nodeCache.title);
-        textField.RegisterValueChangedCallback(evt => { nodeCache.DialogueText = evt.newValue; });
-        nodeCache.Add(textField);
-
-
+        nodeCache.titleButtonContainer.Add(button);
         return nodeCache;
     }
 
@@ -287,7 +294,7 @@ public class NarrativeGraph : EditorWindow
         PortSocket realPort3 =
             nodeCache.AddPort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float),
                 edgeConnectionListener);
-        var portLabel = realPort3.contentContainer.Q<Label>();
+        var portLabel = realPort3.contentContainer.Q<Label>("type");
         realPort3.contentContainer.Remove(portLabel);
         var outputPortCount = nodeCache.outputContainer.Query("connector").ToList().Count();
         var outputPortName = string.IsNullOrEmpty(overriddenPortName)
@@ -300,8 +307,8 @@ public class NarrativeGraph : EditorWindow
             value = outputPortName
         };
         textField.RegisterValueChangedCallback(evt => realPort3.portName = evt.newValue);
+        realPort3.contentContainer.Add(new Label("  "));
         realPort3.contentContainer.Add(textField);
-        realPort3.contentContainer.Add(new Label(" "));
         realPort3.portName = outputPortName;
         nodeCache.outputContainer.Add(realPort3);
         nodeCache.RefreshPorts();
@@ -332,6 +339,7 @@ public class NarrativeGraph : EditorWindow
 
         nodeCache.RefreshExpandedState();
         nodeCache.RefreshPorts();
+        nodeCache.SetPosition(new Rect(100, 200, 100, 150));
         return nodeCache;
     }
 }

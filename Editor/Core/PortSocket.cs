@@ -13,4 +13,9 @@ public class PortSocket : Port
         this.m_EdgeConnector = new EdgeConnector<Edge>(connectionListener);
         this.AddManipulator(edgeConnector);
     }
+
+    public void EmptyLabel()
+    {
+        m_ConnectorText.text = "s";
+    }
 }

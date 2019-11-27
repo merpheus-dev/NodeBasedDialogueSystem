@@ -23,21 +23,36 @@ MonoBehaviour:
     PortName: Shut the F* up
     TargetNodeGUID: 0be35060-9e9a-43a6-b10b-505f8586733d
   - BaseNodeGUID: 6ace0b3d-33c3-43ba-8da2-94293e063d8a
-    PortName: Hey Father
+    PortName: Hey dad!
     TargetNodeGUID: 9464208b-5345-4513-8d60-6c71f8455552
   - BaseNodeGUID: 6ace0b3d-33c3-43ba-8da2-94293e063d8a
     PortName: Whassup oldman?
     TargetNodeGUID: e2fc02d2-1263-4156-afd8-2b7fae381066
+  - BaseNodeGUID: 6ace0b3d-33c3-43ba-8da2-94293e063d8a
+    PortName: Hi sir!
+    TargetNodeGUID: 631d899d-8909-450a-9087-73eb6f5fffae
+  - BaseNodeGUID: 631d899d-8909-450a-9087-73eb6f5fffae
+    PortName: LoL
+    TargetNodeGUID: 53612642-e5c2-4565-aa1f-680683640bf7
+  - BaseNodeGUID: 0be35060-9e9a-43a6-b10b-505f8586733d
+    PortName: Just Kidding...
+    TargetNodeGUID: 53612642-e5c2-4565-aa1f-680683640bf7
   NarrativeTextData:
-  - NodeGUID: 6ace0b3d-33c3-43ba-8da2-94293e063d8a
-    DialogueText: Hello Dear!
-    Position: {x: 340, y: 5}
   - NodeGUID: 9464208b-5345-4513-8d60-6c71f8455552
     DialogueText: How was school today?
-    Position: {x: 750, y: -65}
+    Position: {x: 726, y: 119}
   - NodeGUID: e2fc02d2-1263-4156-afd8-2b7fae381066
     DialogueText: WTF You little shit!?
-    Position: {x: 799, y: 116}
+    Position: {x: 775, y: 300}
+  - NodeGUID: 6ace0b3d-33c3-43ba-8da2-94293e063d8a
+    DialogueText: Hey Buddy!
+    Position: {x: 302, y: 182}
+  - NodeGUID: 631d899d-8909-450a-9087-73eb6f5fffae
+    DialogueText: Haha!
+    Position: {x: 754, y: 476}
   - NodeGUID: 0be35060-9e9a-43a6-b10b-505f8586733d
     DialogueText: WHAT???
-    Position: {x: 1080, y: 28}
+    Position: {x: 1044, y: 204}
+  - NodeGUID: 53612642-e5c2-4565-aa1f-680683640bf7
+    DialogueText: Funny! Dont do that again.
+    Position: {x: 1365, y: 264}

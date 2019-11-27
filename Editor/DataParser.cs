@@ -44,7 +44,8 @@ public class DataParser
             narrativeParts.NarrativeTextData.Add(new NarrativeTextData
             {
                 NodeGUID = node.GUID,
-                DialogueText = node.DialogueText
+                DialogueText = node.DialogueText,
+                Position = node.GetPosition().position
             });
         }
         

@@ -373,7 +373,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37ccaca0d7c48634d8e70996696a3c4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogue: {fileID: 11400000, guid: aa31c35a8d44ff949a4a3774a442d73d, type: 2}
+  dialogue: {fileID: 0}
+  dialogueText: {fileID: 1818617936}
+  choicePrefab: {fileID: 3102500559854669817, guid: f77c89383fd59cd47a1921c9684d4122,
+    type: 3}
+  buttonContainer: {fileID: 1172275448}
 --- !u!1 &998751766
 GameObject:
   m_ObjectHideFlags: 0

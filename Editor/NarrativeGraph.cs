@@ -181,21 +181,27 @@ public class NarrativeGraph : EditorWindow
 
         //Load again after that dump
         nodeList = currentInstance.nodes.ToList().Cast<CanvasNode>().ToList();
+        int k = 1;
         foreach (var perNode in nodeList)
         {
             var connections = narrativeObject.NarrativeData.Where(x => x.BaseNodeGUID == perNode.GUID);
-            
-            var targetNode = nodeList.First(x => x.GUID == connections.First().TargetNodeGUID);
-            var tempEdge = new Edge()
+            int l = 0;
+            foreach (var connection in connections)
             {
-                output = perNode.outputContainer[0] as Port,
-                input = targetNode.inputContainer[0] as Port
-            };
-            tempEdge?.input.Connect(tempEdge);
-            tempEdge?.output.Connect(tempEdge);
-            currentInstance.Add(tempEdge);
-            targetNode.SetPosition(new Rect(new Vector2(100f, 0f), defaultNodeSize));
-            
+                var targetNodeGUID = connection.TargetNodeGUID;
+                var targetNode = nodeList.First(x => x.GUID == targetNodeGUID);
+                var tempEdge = new Edge()
+                {
+                    output = perNode.outputContainer[l] as Port,
+                    input = targetNode.inputContainer[0] as Port
+                };
+                tempEdge?.input.Connect(tempEdge);
+                tempEdge?.output.Connect(tempEdge);
+                currentInstance.Add(tempEdge);
+                targetNode.SetPosition(new Rect(narrativeObject.NarrativeTextData.First(x=>x.NodeGUID==targetNodeGUID).Position, defaultNodeSize));
+                l++;
+            }
+            k++;
 //            if (perNode.EntyPoint)
 //            {
 //                if (connections.Count() == 0)

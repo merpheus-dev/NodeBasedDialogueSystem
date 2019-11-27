@@ -19,9 +19,9 @@ public class EdgeConnectionListener : IEdgeConnectorListener
 
     public void OnDrop(GraphView graphView, Edge edge)
     {
+        if (edge.output.connected) return;
         edge?.input.Connect(edge);
         edge?.output.Connect(edge);
         graphView.Add(edge);
-        Debug.Log("Drop inside");
     }
 }

@@ -1,7 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -9,66 +12,66 @@ public class DataParser
 {
     private static CanvasNode _entryPointNode;
 
+    private static IEnumerable<Edge> _edges;
+
     public static void SetEntryPoint(CanvasNode entryPointNode)
     {
         _entryPointNode = entryPointNode;
     }
 
-    public static void SaveNodes(IEnumerable<Edge> edges)
+    public static void SaveNodes(IEnumerable<Edge> edges, IEnumerable<Node> nodes, string fileName)
     {
         if (!edges.Any() || _entryPointNode == null) return;
+        _edges = edges;
+        var connectedSockets = edges.Where(x => x.input.node != null).ToArray();
+        var narrativeParts = ScriptableObject.CreateInstance<NarrativeDataWrapper>();
 
-        var narrativeParts = new List<NarrativeNodeContainer>();
-        CanvasNode currentNode = _entryPointNode;
-        while (currentNode != null)
+        for (int i = 0; i < connectedSockets.Count(); i++)
         {
-            var connectedNodes =
-                edges.Where(x => x.output.node == currentNode)
-                    .Select(y => y.input.node).Cast<CanvasNode>();
-
-            var nodeDataContainer = new NarrativeNodeContainer(currentNode.GUID);
-            foreach (var connectedNode in connectedNodes)
+            var outputNode = (connectedSockets[i].output.node as CanvasNode);
+            var inputNode = (connectedSockets[i].input.node as CanvasNode);
+            narrativeParts.NarrativeData.Add(new NarrativeData
             {
-                foreach (var connectedPort in connectedNode.Outputs.Where(x => x.connected))
-                {
-                    
-                    nodeDataContainer.AddPortConnection(connectedPort.portName, connectedNode);
-                }
-            }
-
-            narrativeParts.Add(nodeDataContainer);
-            if (connectedNodes.Count() == 0 || connectedNodes == null) break;
-            currentNode = connectedNodes.First();
+                BaseNodeGUID = outputNode.GUID,
+                PortName = connectedSockets[i].output.portName,
+                TargetNodeGUID = inputNode.GUID
+            });
         }
 
-        foreach (var narrativePart in narrativeParts)
+        foreach (var node in nodes.Cast<CanvasNode>())
         {
-            foreach (var portPair in narrativePart.PortGuidPair)
+            if (node.EntyPoint) continue;
+            narrativeParts.NarrativeTextData.Add(new NarrativeTextData
             {
-                var matchingNextNode = edges.Select(x => x.input.node).Cast<CanvasNode>().ToList()
-                    .First(x => x.GUID == portPair.Value);
-                var inceptionNode = edges.Select(x => x.output.node).Cast<CanvasNode>().ToList()
-                    .First(x => x.GUID == narrativePart.Guid);
-                Debug.Log($"{inceptionNode.DialogueText}=[{portPair.Key}]==>{matchingNextNode.DialogueText}");
-            }
+                NodeGUID = node.GUID,
+                DialogueText = node.DialogueText
+            });
+        }
+        
+        if (!AssetDatabase.IsValidFolder("Assets/Resources")) AssetDatabase.CreateFolder("Assets","Resources");
+        AssetDatabase.CreateAsset(narrativeParts,$"Assets/Resources/{fileName}.asset");
+        AssetDatabase.SaveAssets();
+
+        foreach (var narrativePart in narrativeParts.NarrativeData)
+        {
+            Debug.Log(
+                $"{GetNodeName(narrativePart.BaseNodeGUID)}=[{narrativePart.PortName}]==>{GetNodeName(narrativePart.TargetNodeGUID)}");
         }
     }
 
-    private IEnumerator StepOverNodes(IEnumerable<Edge> edges)
+    private static string GetNodeName(string guid)
     {
-        CanvasNode currentNode = _entryPointNode;
-        while (currentNode != null)
+        var target = _edges.Where(x => (x.input.node as CanvasNode).GUID == guid);
+        if (target.Count() <= 0) return string.Empty;
+        var resultNode = target.First().input.node;
+        if (resultNode == null)
         {
-            var connections =
-                edges.Where(x => x.output.node == currentNode)
-                    .Select(y => y.input.node); //edges.First(x => x.output.node == currentNode).input.node;
-            foreach (var connection in connections)
-            {
-                Debug.Log(connection.title);
-            }
-
-            currentNode = connections.First() as CanvasNode;
-            yield return null;
+            resultNode = _edges.First(x =>
+                (x.output.node as CanvasNode).GUID == guid).output.node;
+            if (resultNode == null)
+                throw new Exception("Node not found");
         }
+
+        return (resultNode as CanvasNode).DialogueText;
     }
 }

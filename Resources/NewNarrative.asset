@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78b3fd9154634ebdb8c8a48960b9a16a, type: 3}
+  m_Name: NewNarrative
+  m_EditorClassIdentifier: 
+  NarrativeData:
+  - BaseNodeGUID: 516fbde7-9130-4aa9-bbb2-a09d8c68eec9
+    PortName: Next
+    TargetNodeGUID: 6ace0b3d-33c3-43ba-8da2-94293e063d8a
+  - BaseNodeGUID: 6ace0b3d-33c3-43ba-8da2-94293e063d8a
+    PortName: Hey Father
+    TargetNodeGUID: 9464208b-5345-4513-8d60-6c71f8455552
+  - BaseNodeGUID: 6ace0b3d-33c3-43ba-8da2-94293e063d8a
+    PortName: Whassup oldman?
+    TargetNodeGUID: e2fc02d2-1263-4156-afd8-2b7fae381066
+  - BaseNodeGUID: 9464208b-5345-4513-8d60-6c71f8455552
+    PortName: I got punched on my face
+    TargetNodeGUID: 0be35060-9e9a-43a6-b10b-505f8586733d
+  - BaseNodeGUID: e2fc02d2-1263-4156-afd8-2b7fae381066
+    PortName: Shut the F* up
+    TargetNodeGUID: 0be35060-9e9a-43a6-b10b-505f8586733d
+  NarrativeTextData:
+  - NodeGUID: 6ace0b3d-33c3-43ba-8da2-94293e063d8a
+    DialogueText: Hello Dear!
+  - NodeGUID: 9464208b-5345-4513-8d60-6c71f8455552
+    DialogueText: How was school today?
+  - NodeGUID: e2fc02d2-1263-4156-afd8-2b7fae381066
+    DialogueText: WTF You little shit!?
+  - NodeGUID: 0be35060-9e9a-43a6-b10b-505f8586733d
+    DialogueText: WHAT???

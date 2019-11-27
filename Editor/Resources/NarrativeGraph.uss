@@ -1,6 +1,6 @@
 GridBackground {
-    --grid-background-color: #3c3839;
-    --line-color: #c1c4c0;
+    --grid-background-color: #282828;
+    --line-color: rgba(193, 196, 192, 0.1);
     --thick-line-color: #a7a5aa;
-    --spacing: 250;
+    --spacing: 20;
 }

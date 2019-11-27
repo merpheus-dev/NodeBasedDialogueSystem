@@ -14,6 +14,8 @@ public class NarrativeGraph : EditorWindow
 
     private string fileName = "NewNarrative";
 
+    private Vector2 defaultNodeSize = new Vector2(200, 150);
+
     [MenuItem("Graph/Narrative Graph")]
     public static void CreateGraphViewWindow()
     {
@@ -29,6 +31,7 @@ public class NarrativeGraph : EditorWindow
         };
         currentInstance.StretchToParentSize();
         rootVisualElement.Add(currentInstance);
+        var entryPointNode = CreateEntryPointNode();
 
         var options = new VisualElement
         {
@@ -45,6 +48,7 @@ public class NarrativeGraph : EditorWindow
             }
         };
 
+
         toolbar.Add(options);
         var fileNameTextField = new TextField("File Name:");
         fileNameTextField.SetValueWithoutNotify(fileName);
@@ -54,10 +58,10 @@ public class NarrativeGraph : EditorWindow
         toolbar.Add(new Button(() =>
         {
             if (!string.IsNullOrEmpty(fileName))
-                DataParser.SaveNodes(currentInstance.edges.ToList(), currentInstance.nodes.ToList(),fileName);
+                DataParser.SaveNodes(currentInstance.edges.ToList(), currentInstance.nodes.ToList(), fileName);
             else
             {
-                EditorUtility.DisplayDialog("Invalid File name","Please Enter a valid filename","OK");
+                EditorUtility.DisplayDialog("Invalid File name", "Please Enter a valid filename", "OK");
             }
         })
         {
@@ -68,11 +72,11 @@ public class NarrativeGraph : EditorWindow
         {
             if (!string.IsNullOrEmpty(fileName))
             {
-                LoadNarrative(fileName);
+                LoadNarrative(fileName, entryPointNode);
             }
             else
             {
-                EditorUtility.DisplayDialog("Invalid File name","Please Enter a valid filename","OK");
+                EditorUtility.DisplayDialog("Invalid File name", "Please Enter a valid filename", "OK");
             }
         })
         {
@@ -89,14 +93,13 @@ public class NarrativeGraph : EditorWindow
         });
         rootVisualElement.Add(toolbar);
         //rootVisualElement.Add(group);
-        var node = CreateEntryPointNode();
 
         //node.SetPosition(new Rect(0, 0, 0, 0));
 //        var node2 = CreateNode("There is a weird guy");
 //        var node3 = CreateNode("Called Mert");
         //node.RemoveFromHierarchy();
-        currentInstance.AddElement(node);
-        DataParser.SetEntryPoint(node);
+        currentInstance.AddElement(entryPointNode);
+        DataParser.SetEntryPoint(entryPointNode);
 //
 //        currentInstance.AddElement(node2);
 //        currentInstance.AddElement(node3);
@@ -113,7 +116,7 @@ public class NarrativeGraph : EditorWindow
 //        edge?.input.Connect(edge);
 //        edge?.output.Connect(edge);
 
-        node.RefreshPorts();
+        entryPointNode.RefreshPorts();
         //node2.RefreshPorts();
 
         // currentInstance.Add(edge);
@@ -128,7 +131,7 @@ public class NarrativeGraph : EditorWindow
 //        currentInstance.Add(minimap);
     }
 
-    private void LoadNarrative(string fileName)
+    private void LoadNarrative(string fileName, CanvasNode entryPoint)
     {
         var narrativeObject = Resources.Load<NarrativeDataWrapper>(fileName);
         if (narrativeObject == null)
@@ -136,9 +139,89 @@ public class NarrativeGraph : EditorWindow
             EditorUtility.DisplayDialog("File Not Found", "Target Narrative Data does not exist!", "OK");
             return;
         }
-        
+
+
+        #region Set Entry point GUID then Get All Nodes, remove all and their edges. Leave only the entrypoint node. (Remove its edge too).
+
+        var nodeList = currentInstance.nodes.ToList().Cast<CanvasNode>().ToList();
+        for (int i = 0; i < nodeList.Count; i++)
+        {
+            if (nodeList[i].EntyPoint)
+            {
+                nodeList[i].GUID = narrativeObject.NarrativeData[0].BaseNodeGUID;
+            }
+            else
+            {
+                var edges = currentInstance.edges.ToList().Where(x => x.input.node == nodeList[i]);
+                foreach (var edge in edges)
+                {
+                    currentInstance.RemoveElement(edge);
+                }
+
+                currentInstance.RemoveElement(nodeList[i]);
+            }
+        }
+
+        #endregion
+
+        #region Create All serialized nodes and assign their guid and dialogue text to them
+
+        foreach (var perNode in narrativeObject.NarrativeTextData)
+        {
+            var tempNode = CreateNode(perNode.DialogueText,true);
+            tempNode.GUID = perNode.NodeGUID;
+            currentInstance.AddElement(tempNode);
+
+            var nodePorts = narrativeObject.NarrativeData.Where(x => x.BaseNodeGUID == perNode.NodeGUID).ToList();
+            nodePorts.ForEach(x=>AddPort(tempNode,x.PortName));
+            tempNode.RefreshPorts();
+        }
+
+        #endregion
+
+        //Load again after that dump
+        nodeList = currentInstance.nodes.ToList().Cast<CanvasNode>().ToList();
+        foreach (var perNode in nodeList)
+        {
+            var connections = narrativeObject.NarrativeData.Where(x => x.BaseNodeGUID == perNode.GUID);
+            
+            var targetNode = nodeList.First(x => x.GUID == connections.First().TargetNodeGUID);
+            var tempEdge = new Edge()
+            {
+                output = perNode.outputContainer[0] as Port,
+                input = targetNode.inputContainer[0] as Port
+            };
+            tempEdge?.input.Connect(tempEdge);
+            tempEdge?.output.Connect(tempEdge);
+            currentInstance.Add(tempEdge);
+            targetNode.SetPosition(new Rect(new Vector2(100f, 0f), defaultNodeSize));
+            
+//            if (perNode.EntyPoint)
+//            {
+//                if (connections.Count() == 0)
+//                    return; //If nothing is connected to entrypoint, not load any other node or connection
+//
+//                var targetNode = nodeList.First(x => x.GUID == connections.First().TargetNodeGUID);
+//                var tempEdge = new Edge()
+//                {
+//                    output = perNode.outputContainer[0] as Port,
+//                    input = targetNode.inputContainer[0] as Port
+//                };
+//                tempEdge?.input.Connect(tempEdge);
+//                tempEdge?.output.Connect(tempEdge);
+//                currentInstance.Add(tempEdge);
+//                targetNode.SetPosition(new Rect(new Vector2(100f, 0f), defaultNodeSize));
+//                continue;
+//            }
+
+//            foreach (var connection in connections)
+//            {
+//                AddPort(tempNode);
+//               
+//            }
+        }
     }
-    
+
     public void GetNodeData()
     {
         currentInstance.edges.ForEach(x =>
@@ -153,7 +236,7 @@ public class NarrativeGraph : EditorWindow
         rootVisualElement.Remove(currentInstance);
     }
 
-    private Node CreateNode(string nodeName)
+    private CanvasNode CreateNode(string nodeName, bool load = false)
     {
         var nodeCache = new CanvasNode()
         {
@@ -164,7 +247,8 @@ public class NarrativeGraph : EditorWindow
         nodeCache.mainContainer.Add(new Label(nodeName));
         // nodeCache.extensionContainer.style.backgroundColor = new Color(0.24f, 0.24f, 0.24f, 0.8f);
 //InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(float));
-        AddPort(nodeCache);
+        if (!load)
+            AddPort(nodeCache);
 
         var edgeListener = new EdgeConnectionListener(this);
         PortSocket realPort2 =
@@ -175,6 +259,7 @@ public class NarrativeGraph : EditorWindow
 
         nodeCache.RefreshExpandedState();
         nodeCache.RefreshPorts();
+        nodeCache.SetPosition(new Rect(Vector2.zero, defaultNodeSize));
 
         var button = new Button(() => { AddPort(nodeCache); })
         {
@@ -190,7 +275,7 @@ public class NarrativeGraph : EditorWindow
         return nodeCache;
     }
 
-    private void AddPort(CanvasNode nodeCache)
+    private void AddPort(CanvasNode nodeCache, string overriddenPortName = "")
     {
         var edgeConnectionListener = new EdgeConnectionListener(this);
         PortSocket realPort3 =
@@ -199,7 +284,9 @@ public class NarrativeGraph : EditorWindow
         var portLabel = realPort3.contentContainer.Q<Label>();
         realPort3.contentContainer.Remove(portLabel);
         var outputPortCount = nodeCache.outputContainer.Query("connector").ToList().Count();
-        var outputPortName = $"Option {outputPortCount + 1}";
+        var outputPortName = string.IsNullOrEmpty(overriddenPortName)
+            ? $"Option {outputPortCount + 1}"
+            : overriddenPortName;
 
         var textField = new TextField()
         {

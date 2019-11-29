@@ -15,7 +15,7 @@
     {
       "displayName": "Demo Scene",
       "description": "A simple example for loading and displaying the Dialogue and branching",
-      "path": "Samples~/DialogueSystemDemo",
+      "path": "Samples/DialogueSystemDemo",
       "dependencies": { "com.unity.textmeshpro": "2.0.1" }
     }
   ],

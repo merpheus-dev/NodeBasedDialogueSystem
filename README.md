@@ -1,7 +1,7 @@
 # Node Based Dialogue System for Unity
 
 This is a node-based visual narrative flow creation tool that uses Unity's GraphView API.
-
+![](https://i.ibb.co/M2kJGnr/img.png)
 
 ## Features
 - Infinite Branching and Merging dialogue capability.

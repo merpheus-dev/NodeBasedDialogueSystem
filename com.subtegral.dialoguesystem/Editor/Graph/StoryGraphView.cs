@@ -38,7 +38,7 @@ namespace Subtegral.DialogueSystem.Editor
             ports.ForEach((port) =>
             {
                 var portView = port as PortSocket;
-                if (startPortView != portView && startPortView.node!=portView.node)
+                if (startPortView != portView && startPortView.node != portView.node)
                     compatiblePorts.Add(port);
             });
 
@@ -49,8 +49,8 @@ namespace Subtegral.DialogueSystem.Editor
         {
             AddElement(CreateNode(nodeName));
         }
-        
-        
+
+
         public DialogueNode CreateNode(string nodeName)
         {
             var tempDialogueNode = new DialogueNode()
@@ -60,12 +60,14 @@ namespace Subtegral.DialogueSystem.Editor
                 GUID = Guid.NewGuid().ToString()
             };
 
+            tempDialogueNode.styleSheets.Add(Resources.Load<StyleSheet>("Node"));
             var inputPort = GetPortInstance(tempDialogueNode, Direction.Input);
             inputPort.portName = "Input";
             tempDialogueNode.inputContainer.Add(inputPort);
             tempDialogueNode.RefreshExpandedState();
             tempDialogueNode.RefreshPorts();
-            tempDialogueNode.SetPosition(new Rect(Vector2.zero, DefaultNodeSize)); //To-Do: implement screen center instantiation positioning
+            tempDialogueNode.SetPosition(new Rect(Vector2.zero,
+                DefaultNodeSize)); //To-Do: implement screen center instantiation positioning
 
             var textField = new TextField("");
             textField.RegisterValueChangedCallback(evt =>
@@ -83,8 +85,7 @@ namespace Subtegral.DialogueSystem.Editor
             tempDialogueNode.titleButtonContainer.Add(button);
             return tempDialogueNode;
         }
-        
-        
+
 
         public void AddChoicePort(DialogueNode nodeCache, string overriddenPortName = "")
         {
@@ -97,6 +98,7 @@ namespace Subtegral.DialogueSystem.Editor
                 ? $"Option {outputPortCount + 1}"
                 : overriddenPortName;
 
+
             var textField = new TextField()
             {
                 name = string.Empty,
@@ -105,11 +107,31 @@ namespace Subtegral.DialogueSystem.Editor
             textField.RegisterValueChangedCallback(evt => generatedPort.portName = evt.newValue);
             generatedPort.contentContainer.Add(new Label("  "));
             generatedPort.contentContainer.Add(textField);
-
+            var deleteButton = new Button(() => RemovePort(nodeCache, generatedPort))
+            {
+                text = "X"
+            };
+            generatedPort.contentContainer.Add(deleteButton);
             generatedPort.portName = outputPortName;
             nodeCache.outputContainer.Add(generatedPort);
             nodeCache.RefreshPorts();
             nodeCache.RefreshExpandedState();
+        }
+
+        private void RemovePort(Node node, Port socket)
+        {
+            var targetEdge = edges.ToList()
+                .Where(x => x.output.portName == socket.portName && x.output.node == socket.node);
+            if (targetEdge.Any())
+            {
+                var edge = targetEdge.First();
+                edge.input.Disconnect(edge);
+                RemoveElement(targetEdge.First());
+            }
+
+            node.outputContainer.Remove(socket);
+            node.RefreshPorts();
+            node.RefreshExpandedState();
         }
 
         private PortSocket GetPortInstance(DialogueNode node, Direction nodeDirection)
@@ -118,7 +140,7 @@ namespace Subtegral.DialogueSystem.Editor
             return node.AddPort(Orientation.Horizontal, nodeDirection, Port.Capacity.Single, typeof(float),
                 edgeConnectionListener);
         }
-        
+
         private DialogueNode GetEntryPointNodeInstance()
         {
             var nodeCache = new DialogueNode()

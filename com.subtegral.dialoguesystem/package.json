@@ -1,0 +1,27 @@
+{
+  "name": "com.subtegral.dialoguesystem",
+  "displayName": "Dialogue System",
+  "version": "1.0.1",
+  "unity": "2019.1",
+  "description": "A simple node based dialogue system which uses GraphView Api",
+  "keywords": [
+    "Graph",
+    "GraphView",
+    "Dialogue",
+    "Narrative",
+    "Story based"
+  ],
+  "samples": [
+    {
+      "displayName": "Demo Scene",
+      "description": "A simple example for loading and displaying the Dialogue and branching",
+      "path": "Samples~/DialogueSystemDemo",
+      "dependencies": { "com.unity.textmeshpro": "2.0.1" }
+    }
+  ],
+  "category": "Visual Scripting",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/m3rt32/NodeBasedDialogueSystem.git"
+  }
+}

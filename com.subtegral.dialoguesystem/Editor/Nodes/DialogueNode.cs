@@ -11,12 +11,5 @@ namespace Subtegral.DialogueSystem.Editor
         public string DialogueText;
         public string GUID;
         public bool EntyPoint = false;
-
-        public PortSocket AddPort(Orientation portOrientation, Direction portDirection, Port.Capacity portCapacity,
-            Type type,
-            EdgeConnectionListener connectionListener)
-        {
-            return new PortSocket(portOrientation, portDirection, portCapacity, type, connectionListener);
-        }
     }
 }

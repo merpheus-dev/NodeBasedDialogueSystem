@@ -33,11 +33,11 @@ namespace Subtegral.DialogueSystem.Editor
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
         {
             var compatiblePorts = new List<Port>();
-            var startPortView = startPort as PortSocket;
+            var startPortView = startPort;
 
             ports.ForEach((port) =>
             {
-                var portView = port as PortSocket;
+                var portView = port;
                 if (startPortView != portView && startPortView.node != portView.node)
                     compatiblePorts.Add(port);
             });
@@ -61,7 +61,7 @@ namespace Subtegral.DialogueSystem.Editor
             };
 
             tempDialogueNode.styleSheets.Add(Resources.Load<StyleSheet>("Node"));
-            var inputPort = GetPortInstance(tempDialogueNode, Direction.Input);
+            var inputPort = GetPortInstance(tempDialogueNode, Direction.Input,Port.Capacity.Multi);
             inputPort.portName = "Input";
             tempDialogueNode.inputContainer.Add(inputPort);
             tempDialogueNode.RefreshExpandedState();
@@ -134,11 +134,9 @@ namespace Subtegral.DialogueSystem.Editor
             node.RefreshExpandedState();
         }
 
-        private PortSocket GetPortInstance(DialogueNode node, Direction nodeDirection)
+        private Port GetPortInstance(DialogueNode node, Direction nodeDirection,Port.Capacity capacity=Port.Capacity.Single)
         {
-            var edgeConnectionListener = new EdgeConnectionListener();
-            return node.AddPort(Orientation.Horizontal, nodeDirection, Port.Capacity.Single, typeof(float),
-                edgeConnectionListener);
+            return node.InstantiatePort(Orientation.Horizontal, nodeDirection, capacity, typeof(float));
         }
 
         private DialogueNode GetEntryPointNodeInstance()

@@ -8,28 +8,46 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Subtegral.DialogueSystem.DataContainers;
+using System.IO;
 
 namespace Subtegral.DialogueSystem.Editor
 {
     public class StoryGraph : EditorWindow
     {
-        private string _fileName = "New Narrative";
+        private string _filePath = null;
 
         private StoryGraphView _graphView;
         private DialogueContainer _dialogueContainer;
+
+        private void Update()
+        {
+            if (Selection.activeObject == null || Selection.activeObject.GetType() != typeof(DialogueContainer))
+            {
+                return;
+            }
+            var selectedGraph = Selection.activeObject as DialogueContainer;
+            var path = AssetDatabase.GetAssetPath(selectedGraph.GetInstanceID());
+            if (path != null && path != _filePath)
+            {
+                var saveUtility = GraphSaveUtility.GetInstance(_graphView);
+                saveUtility.LoadNarrative(path);
+                _filePath = path;
+                UpdateTitle();
+            }
+        }
 
         [MenuItem("Graph/Narrative Graph")]
         public static void CreateGraphViewWindow()
         {
             var window = GetWindow<StoryGraph>();
-            window.titleContent = new GUIContent("Narrative Graph");
+            window.UpdateTitle();
         }
 
         private void ConstructGraphView()
         {
             _graphView = new StoryGraphView
             {
-                name = "Narrative Graph"
+                name = _filePath != null ? Path.GetFileName(_filePath) : "Unsaved New Narrative"
             };
             _graphView.StretchToParentSize();
             rootVisualElement.Add(_graphView);
@@ -39,32 +57,50 @@ namespace Subtegral.DialogueSystem.Editor
         {
             var toolbar = new Toolbar();
 
-            var fileNameTextField = new TextField("File Name:");
-            fileNameTextField.SetValueWithoutNotify(_fileName);
-            fileNameTextField.MarkDirtyRepaint();
-            fileNameTextField.RegisterValueChangedCallback(evt => _fileName = evt.newValue);
-            toolbar.Add(fileNameTextField);
+            UpdateTitle();
 
-            toolbar.Add(new Button(() => RequestDataOperation(true)) {text = "Save Data"});
+            toolbar.Add(new Button(() => Save()) { text = "Save Data" });
 
-            toolbar.Add(new Button(() => RequestDataOperation(false)) {text = "Load Data"});
-            toolbar.Add(new Button(() => _graphView.CreateNewDialogueNode("Dialogue Node")) {text = "New Node",});
+            toolbar.Add(new Button(() => CreateNew()) { text = "New narrative" });
+            toolbar.Add(new Button(() => _graphView.CreateNewDialogueNode("Dialogue Node")) { text = "New Node", });
             rootVisualElement.Add(toolbar);
         }
 
-        private void RequestDataOperation(bool save)
+        private void UpdateTitle()
         {
-            if (!string.IsNullOrEmpty(_fileName))
+            this.titleContent = new GUIContent(_filePath != null ? Path.GetFileName(_filePath) : "Unsaved New Narrative");
+        }
+
+        private void CreateNew()
+        {
+            var loadFilePath = EditorUtility.SaveFilePanelInProject("Create Narrative", "New narrative", "asset", "");
+
+            var saveUtility = GraphSaveUtility.GetInstance(_graphView);
+            _graphView = new StoryGraphView
             {
-                var saveUtility = GraphSaveUtility.GetInstance(_graphView);
-                if (save)
-                    saveUtility.SaveNodes(_fileName);
-                else
-                    saveUtility.LoadNarrative(_fileName);
+                name = "Narrative Graph"
+            };
+            _filePath = loadFilePath;
+            UpdateTitle();
+        }
+        private void SaveAs()
+        {
+            var saveUtility = GraphSaveUtility.GetInstance(_graphView);
+            // TODO: change file path only if save succeeded.
+            _filePath = EditorUtility.SaveFilePanelInProject("New narrative", "New narrative", "asset", "Save As...");
+            saveUtility.SaveNodes(_filePath);
+            UpdateTitle();
+        }
+        private void Save()
+        {
+            if (_filePath == null)
+            {
+                SaveAs();
             }
             else
             {
-                EditorUtility.DisplayDialog("Invalid File name", "Please Enter a valid filename", "OK");
+                var saveUtility = GraphSaveUtility.GetInstance(_graphView);
+                saveUtility.SaveNodes(_filePath);
             }
         }
 
@@ -77,7 +113,7 @@ namespace Subtegral.DialogueSystem.Editor
 
         private void GenerateMiniMap()
         {
-            var miniMap = new MiniMap {anchored = true};
+            var miniMap = new MiniMap { anchored = true };
             miniMap.SetPosition(new Rect(10, 30, 200, 140));
             _graphView.Add(miniMap);
         }
@@ -87,6 +123,6 @@ namespace Subtegral.DialogueSystem.Editor
         {
             rootVisualElement.Remove(_graphView);
         }
-       
+
     }
 }

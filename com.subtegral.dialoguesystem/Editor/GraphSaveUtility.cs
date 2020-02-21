@@ -28,7 +28,7 @@ namespace Subtegral.DialogueSystem.Editor
             };
         }
 
-        public void SaveNodes(string fileName)
+        public void SaveNodes(string filePath)
         {
             if (!Edges.Any()) return;
             var dialogueContainerObject = ScriptableObject.CreateInstance<DialogueContainer>();
@@ -55,17 +55,13 @@ namespace Subtegral.DialogueSystem.Editor
                     Position = node.GetPosition().position
                 });
             }
-
-            if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-                AssetDatabase.CreateFolder("Assets", "Resources");
-
-            AssetDatabase.CreateAsset(dialogueContainerObject, $"Assets/Resources/{fileName}.asset");
+            AssetDatabase.CreateAsset(dialogueContainerObject, filePath);
             AssetDatabase.SaveAssets();
         }
 
-        public void LoadNarrative(string fileName)
+        public void LoadNarrative(string filePath)
         {
-            _dialogueContainer = Resources.Load<DialogueContainer>(fileName);
+            _dialogueContainer = AssetDatabase.LoadAssetAtPath<DialogueContainer>(filePath);
             if (_dialogueContainer == null)
             {
                 EditorUtility.DisplayDialog("File Not Found", "Target Narrative Data does not exist!", "OK");
@@ -118,7 +114,7 @@ namespace Subtegral.DialogueSystem.Editor
                 {
                     var targetNodeGUID = connections[j].TargetNodeGUID;
                     var targetNode = Nodes.First(x => x.GUID == targetNodeGUID);
-                    LinkNodesTogether(Nodes[i].outputContainer[j].Q<Port>(), (Port) targetNode.inputContainer[0]);
+                    LinkNodesTogether(Nodes[i].outputContainer[j].Q<Port>(), (Port)targetNode.inputContainer[0]);
 
                     targetNode.SetPosition(new Rect(
                         _dialogueContainer.DialogueNodeData.First(x => x.NodeGUID == targetNodeGUID).Position,

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,8 +13,9 @@ namespace Subtegral.DialogueSystem.Editor
     {
         public readonly Vector2 DefaultNodeSize = new Vector2(200, 150);
         public DialogueNode EntryPointNode;
+        private NodeSearchWindow searchWindow;
 
-        public StoryGraphView()
+        public StoryGraphView(StoryGraph editorWindow)
         {
             styleSheets.Add(Resources.Load<StyleSheet>("NarrativeGraph"));
             SetupZoom(ContentZoomer.DefaultMinScale, ContentZoomer.DefaultMaxScale);
@@ -28,6 +30,11 @@ namespace Subtegral.DialogueSystem.Editor
             grid.StretchToParentSize();
 
             AddElement(GetEntryPointNodeInstance());
+
+            searchWindow = ScriptableObject.CreateInstance<NodeSearchWindow>();
+            searchWindow.Configure(editorWindow,this);
+            nodeCreationRequest = context =>
+                SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), searchWindow);
         }
 
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
@@ -45,13 +52,13 @@ namespace Subtegral.DialogueSystem.Editor
             return compatiblePorts;
         }
 
-        public void CreateNewDialogueNode(string nodeName)
+        public void CreateNewDialogueNode(string nodeName,Vector2 position)
         {
-            AddElement(CreateNode(nodeName));
+            AddElement(CreateNode(nodeName,position));
         }
 
 
-        public DialogueNode CreateNode(string nodeName)
+        public DialogueNode CreateNode(string nodeName,Vector2 position)
         {
             var tempDialogueNode = new DialogueNode()
             {
@@ -59,14 +66,13 @@ namespace Subtegral.DialogueSystem.Editor
                 DialogueText = nodeName,
                 GUID = Guid.NewGuid().ToString()
             };
-
             tempDialogueNode.styleSheets.Add(Resources.Load<StyleSheet>("Node"));
             var inputPort = GetPortInstance(tempDialogueNode, Direction.Input,Port.Capacity.Multi);
             inputPort.portName = "Input";
             tempDialogueNode.inputContainer.Add(inputPort);
             tempDialogueNode.RefreshExpandedState();
             tempDialogueNode.RefreshPorts();
-            tempDialogueNode.SetPosition(new Rect(Vector2.zero,
+            tempDialogueNode.SetPosition(new Rect(position,
                 DefaultNodeSize)); //To-Do: implement screen center instantiation positioning
 
             var textField = new TextField("");

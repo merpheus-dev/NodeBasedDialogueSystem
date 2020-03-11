@@ -7,6 +7,7 @@ This is a node-based visual narrative flow creation tool that uses Unity's Graph
 - Infinite Branching and Merging dialogue capability.
 - Dialogue&Graph save/load system.
 - Minimap for easy navigation.
+- Search window for node creation.
 - Backed by Unity's embedded GraphView api.
 - Sample provided in the package.
 

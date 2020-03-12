@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Subtegral.DialogueSystem.DataContainers;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -15,8 +16,10 @@ namespace Subtegral.DialogueSystem.Editor
     {
         public readonly Vector2 DefaultNodeSize = new Vector2(200, 150);
         public DialogueNode EntryPointNode;
-        private NodeSearchWindow searchWindow;
-        private Blackboard _blackboard;
+        public Blackboard Blackboard = new Blackboard();
+        public List<ExposedProperty> ExposedProperties { get; private set; } = new List<ExposedProperty>();
+        
+        private NodeSearchWindow _searchWindow;
 
         public StoryGraphView(StoryGraph editorWindow)
         {
@@ -34,26 +37,55 @@ namespace Subtegral.DialogueSystem.Editor
 
             AddElement(GetEntryPointNodeInstance());
 
-            searchWindow = ScriptableObject.CreateInstance<NodeSearchWindow>();
-            searchWindow.Configure(editorWindow,this);
-            nodeCreationRequest = context =>
-                SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), searchWindow);
-            
-            _blackboard = new Blackboard(this);
-            _blackboard.addItemRequested = blackboard =>
-            {
-                var container = new VisualElement();
-                var row = new BlackboardSection {title = "Exposed Variable"};
-                container.Add(row);
-                var field = new BlackboardField {text = "New String",typeText = "string"};
-                container.Add(field);
-                var sa = new BlackboardRow(field,new TextField("Default Value:"));
-                container.Add(sa);
-                blackboard.Add(container);
-                blackboard.MarkDirtyRepaint();
-            };
-            Add(_blackboard);
+            AddSearchWindow(editorWindow);
         }
+
+        private void AddSearchWindow(StoryGraph editorWindow)
+        {
+            _searchWindow = ScriptableObject.CreateInstance<NodeSearchWindow>();
+            _searchWindow.Configure(editorWindow, this);
+            nodeCreationRequest = context =>
+                SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), _searchWindow);
+        }
+
+
+
+        public void ClearBlackBoardAndExposedProperties()
+        {
+            ExposedProperties.Clear();
+            Blackboard.Clear();
+        }
+        
+        public void AddPropertyToBlackBoard(ExposedProperty property,bool loadMode=false)
+        {
+            var localPropertyName = property.PropertyName;
+            var localPropertyValue = property.PropertyValue;
+            if (!loadMode)
+            {
+                while (ExposedProperties.Any(x => x.PropertyName == localPropertyName))
+                    localPropertyName = $"{localPropertyName}(1)";
+            }
+
+            var item = ExposedProperty.CreateInstance();
+            item.PropertyName = localPropertyName;
+            item.PropertyValue = localPropertyValue;
+            ExposedProperties.Add(item);
+                
+            var container = new VisualElement();
+            var field = new BlackboardField {text = localPropertyName, typeText = "string"};
+            container.Add(field);
+                
+            var propertyValueTextField = new TextField("Value:")
+            {
+                value = localPropertyValue
+            };
+            propertyValueTextField.RegisterValueChangedCallback(evt =>
+                ExposedProperties[ExposedProperties.Count-1].PropertyValue = evt.newValue);
+            var sa = new BlackboardRow(field, propertyValueTextField);
+            container.Add(sa);
+            Blackboard.Add(container);
+        }
+        
 
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
         {
@@ -70,13 +102,13 @@ namespace Subtegral.DialogueSystem.Editor
             return compatiblePorts;
         }
 
-        public void CreateNewDialogueNode(string nodeName,Vector2 position)
+        public void CreateNewDialogueNode(string nodeName, Vector2 position)
         {
-            AddElement(CreateNode(nodeName,position));
+            AddElement(CreateNode(nodeName, position));
         }
 
 
-        public DialogueNode CreateNode(string nodeName,Vector2 position)
+        public DialogueNode CreateNode(string nodeName, Vector2 position)
         {
             var tempDialogueNode = new DialogueNode()
             {
@@ -85,7 +117,7 @@ namespace Subtegral.DialogueSystem.Editor
                 GUID = Guid.NewGuid().ToString()
             };
             tempDialogueNode.styleSheets.Add(Resources.Load<StyleSheet>("Node"));
-            var inputPort = GetPortInstance(tempDialogueNode, Direction.Input,Port.Capacity.Multi);
+            var inputPort = GetPortInstance(tempDialogueNode, Direction.Input, Port.Capacity.Multi);
             inputPort.portName = "Input";
             tempDialogueNode.inputContainer.Add(inputPort);
             tempDialogueNode.RefreshExpandedState();
@@ -158,7 +190,8 @@ namespace Subtegral.DialogueSystem.Editor
             node.RefreshExpandedState();
         }
 
-        private Port GetPortInstance(DialogueNode node, Direction nodeDirection,Port.Capacity capacity=Port.Capacity.Single)
+        private Port GetPortInstance(DialogueNode node, Direction nodeDirection,
+            Port.Capacity capacity = Port.Capacity.Single)
         {
             return node.InstantiatePort(Orientation.Horizontal, nodeDirection, capacity, typeof(float));
         }
@@ -185,6 +218,5 @@ namespace Subtegral.DialogueSystem.Editor
             nodeCache.SetPosition(new Rect(100, 200, 100, 150));
             return nodeCache;
         }
-        
     }
 }

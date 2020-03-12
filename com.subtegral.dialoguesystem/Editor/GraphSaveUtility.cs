@@ -28,11 +28,22 @@ namespace Subtegral.DialogueSystem.Editor
             };
         }
 
-        public void SaveNodes(string fileName)
+        public void SaveGraph(string fileName)
         {
-            if (!Edges.Any()) return;
             var dialogueContainerObject = ScriptableObject.CreateInstance<DialogueContainer>();
+            if (!SaveNodes(fileName, dialogueContainerObject)) return;
+            SaveExposedProperties(dialogueContainerObject);
 
+            if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+                AssetDatabase.CreateFolder("Assets", "Resources");
+
+            AssetDatabase.CreateAsset(dialogueContainerObject, $"Assets/Resources/{fileName}.asset");
+            AssetDatabase.SaveAssets();
+        }
+
+        private bool SaveNodes(string fileName, DialogueContainer dialogueContainerObject)
+        {
+            if (!Edges.Any()) return false;
             var connectedSockets = Edges.Where(x => x.input.node != null).ToArray();
             for (var i = 0; i < connectedSockets.Count(); i++)
             {
@@ -56,11 +67,13 @@ namespace Subtegral.DialogueSystem.Editor
                 });
             }
 
-            if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-                AssetDatabase.CreateFolder("Assets", "Resources");
+            return true;
+        }
 
-            AssetDatabase.CreateAsset(dialogueContainerObject, $"Assets/Resources/{fileName}.asset");
-            AssetDatabase.SaveAssets();
+        private void SaveExposedProperties(DialogueContainer dialogueContainer)
+        {
+            dialogueContainer.ExposedProperties.Clear();
+            dialogueContainer.ExposedProperties.AddRange(_graphView.ExposedProperties);
         }
 
         public void LoadNarrative(string fileName)
@@ -75,6 +88,7 @@ namespace Subtegral.DialogueSystem.Editor
             ClearGraph();
             GenerateDialogueNodes();
             ConnectDialogueNodes();
+            AddExposedProperties();
         }
 
         /// <summary>
@@ -99,7 +113,7 @@ namespace Subtegral.DialogueSystem.Editor
         {
             foreach (var perNode in _dialogueContainer.DialogueNodeData)
             {
-                var tempNode = _graphView.CreateNode(perNode.DialogueText,Vector2.zero);
+                var tempNode = _graphView.CreateNode(perNode.DialogueText, Vector2.zero);
                 tempNode.GUID = perNode.NodeGUID;
                 _graphView.AddElement(tempNode);
 
@@ -137,6 +151,15 @@ namespace Subtegral.DialogueSystem.Editor
             tempEdge?.input.Connect(tempEdge);
             tempEdge?.output.Connect(tempEdge);
             _graphView.Add(tempEdge);
+        }
+
+        private void AddExposedProperties()
+        {
+            _graphView.ClearBlackBoardAndExposedProperties();
+            foreach (var exposedProperty in _dialogueContainer.ExposedProperties)
+            {
+                _graphView.AddPropertyToBlackBoard(exposedProperty);
+            }
         }
     }
 }

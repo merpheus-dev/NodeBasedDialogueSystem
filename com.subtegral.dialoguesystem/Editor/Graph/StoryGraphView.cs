@@ -5,7 +5,9 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.UIElements;
+using Button = UnityEngine.UIElements.Button;
 
 namespace Subtegral.DialogueSystem.Editor
 {
@@ -14,6 +16,7 @@ namespace Subtegral.DialogueSystem.Editor
         public readonly Vector2 DefaultNodeSize = new Vector2(200, 150);
         public DialogueNode EntryPointNode;
         private NodeSearchWindow searchWindow;
+        private Blackboard _blackboard;
 
         public StoryGraphView(StoryGraph editorWindow)
         {
@@ -35,6 +38,21 @@ namespace Subtegral.DialogueSystem.Editor
             searchWindow.Configure(editorWindow,this);
             nodeCreationRequest = context =>
                 SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), searchWindow);
+            
+            _blackboard = new Blackboard(this);
+            _blackboard.addItemRequested = blackboard =>
+            {
+                var container = new VisualElement();
+                var row = new BlackboardSection {title = "Exposed Variable"};
+                container.Add(row);
+                var field = new BlackboardField {text = "New String",typeText = "string"};
+                container.Add(field);
+                var sa = new BlackboardRow(field,new TextField("Default Value:"));
+                container.Add(sa);
+                blackboard.Add(container);
+                blackboard.MarkDirtyRepaint();
+            };
+            Add(_blackboard);
         }
 
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
@@ -167,5 +185,6 @@ namespace Subtegral.DialogueSystem.Editor
             nodeCache.SetPosition(new Rect(100, 200, 100, 150));
             return nodeCache;
         }
+        
     }
 }

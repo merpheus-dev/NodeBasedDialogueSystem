@@ -18,7 +18,7 @@ namespace Subtegral.DialogueSystem.Editor
         public DialogueNode EntryPointNode;
         public Blackboard Blackboard = new Blackboard();
         public List<ExposedProperty> ExposedProperties { get; private set; } = new List<ExposedProperty>();
-        
+
         private NodeSearchWindow _searchWindow;
 
         public StoryGraphView(StoryGraph editorWindow)
@@ -49,14 +49,13 @@ namespace Subtegral.DialogueSystem.Editor
         }
 
 
-
         public void ClearBlackBoardAndExposedProperties()
         {
             ExposedProperties.Clear();
             Blackboard.Clear();
         }
-        
-        public void AddPropertyToBlackBoard(ExposedProperty property,bool loadMode=false)
+
+        public void AddPropertyToBlackBoard(ExposedProperty property, bool loadMode = false)
         {
             var localPropertyName = property.PropertyName;
             var localPropertyValue = property.PropertyValue;
@@ -70,22 +69,25 @@ namespace Subtegral.DialogueSystem.Editor
             item.PropertyName = localPropertyName;
             item.PropertyValue = localPropertyValue;
             ExposedProperties.Add(item);
-                
+
             var container = new VisualElement();
             var field = new BlackboardField {text = localPropertyName, typeText = "string"};
             container.Add(field);
-                
+
             var propertyValueTextField = new TextField("Value:")
             {
                 value = localPropertyValue
             };
             propertyValueTextField.RegisterValueChangedCallback(evt =>
-                ExposedProperties[ExposedProperties.Count-1].PropertyValue = evt.newValue);
+            {
+                var index = ExposedProperties.FindIndex(x => x.PropertyName == item.PropertyName);
+                ExposedProperties[index].PropertyValue = evt.newValue;
+            });
             var sa = new BlackboardRow(field, propertyValueTextField);
             container.Add(sa);
             Blackboard.Add(container);
         }
-        
+
 
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
         {

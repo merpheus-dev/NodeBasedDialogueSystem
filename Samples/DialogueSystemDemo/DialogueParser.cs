@@ -47,7 +47,6 @@ namespace Subtegral.DialogueSystem.Runtime
             {
                 text = text.Replace($"[{exposedProperty.PropertyName}]", exposedProperty.PropertyValue);
             }
-
             return text;
         }
     }

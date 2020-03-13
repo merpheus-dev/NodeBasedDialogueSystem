@@ -106,6 +106,7 @@ namespace Subtegral.DialogueSystem.Editor
                 _graphView.ExposedProperties[targetIndex].PropertyName = newValue;
                 ((BlackboardField) element).text = newValue;
             };
+            blackboard.SetPosition(new Rect(10,30,200,300));
             _graphView.Add(blackboard);
             _graphView.Blackboard = blackboard;
         }

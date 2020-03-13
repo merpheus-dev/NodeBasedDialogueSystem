@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
@@ -56,11 +57,9 @@ namespace Subtegral.DialogueSystem.Editor
                 case DialogueNode dialogueNode:
                     _graphView.CreateNewDialogueNode("Dialogue Node",graphMousePosition);
                     return true;
-                case Group group: //TODO:Add a function to do this in graphview class
-                    _graphView.Add(new Group
-                    {
-                        autoUpdateGeometry = true,title = "Comment Block"
-                    });
+                case Group group:
+                    var rect = new Rect(graphMousePosition, _graphView.DefaultCommentBlockSize);
+                     _graphView.CreateCommentBlock(rect);
                     return true;
             }
             return false;

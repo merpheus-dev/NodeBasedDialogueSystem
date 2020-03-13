@@ -15,10 +15,10 @@ namespace Subtegral.DialogueSystem.Editor
     public class StoryGraphView : GraphView
     {
         public readonly Vector2 DefaultNodeSize = new Vector2(200, 150);
+        public readonly Vector2 DefaultCommentBlockSize = new Vector2(300, 200);
         public DialogueNode EntryPointNode;
         public Blackboard Blackboard = new Blackboard();
         public List<ExposedProperty> ExposedProperties { get; private set; } = new List<ExposedProperty>();
-
         private NodeSearchWindow _searchWindow;
 
         public StoryGraphView(StoryGraph editorWindow)
@@ -40,6 +40,7 @@ namespace Subtegral.DialogueSystem.Editor
             AddSearchWindow(editorWindow);
         }
 
+
         private void AddSearchWindow(StoryGraph editorWindow)
         {
             _searchWindow = ScriptableObject.CreateInstance<NodeSearchWindow>();
@@ -53,6 +54,20 @@ namespace Subtegral.DialogueSystem.Editor
         {
             ExposedProperties.Clear();
             Blackboard.Clear();
+        }
+
+        public Group CreateCommentBlock(Rect rect, CommentBlockData commentBlockData = null)
+        {
+            if(commentBlockData==null)
+                commentBlockData = new CommentBlockData();
+            var group = new Group
+            {
+                autoUpdateGeometry = true,
+                title = commentBlockData.Title
+            };
+            AddElement(group);
+            group.SetPosition(rect);
+            return group;
         }
 
         public void AddPropertyToBlackBoard(ExposedProperty property, bool loadMode = false)
@@ -88,7 +103,6 @@ namespace Subtegral.DialogueSystem.Editor
             Blackboard.Add(container);
         }
 
-
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
         {
             var compatiblePorts = new List<Port>();
@@ -108,7 +122,6 @@ namespace Subtegral.DialogueSystem.Editor
         {
             AddElement(CreateNode(nodeName, position));
         }
-
 
         public DialogueNode CreateNode(string nodeName, Vector2 position)
         {

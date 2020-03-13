@@ -17,6 +17,10 @@ namespace Subtegral.DialogueSystem.Editor
     {
         private List<Edge> Edges => _graphView.edges.ToList();
         private List<DialogueNode> Nodes => _graphView.nodes.ToList().Cast<DialogueNode>().ToList();
+
+        private List<Group> CommentBlocks =>
+            _graphView.graphElements.ToList().Where(x => x is Group).Cast<Group>().ToList();
+
         private DialogueContainer _dialogueContainer;
         private StoryGraphView _graphView;
 
@@ -33,6 +37,7 @@ namespace Subtegral.DialogueSystem.Editor
             var dialogueContainerObject = ScriptableObject.CreateInstance<DialogueContainer>();
             if (!SaveNodes(fileName, dialogueContainerObject)) return;
             SaveExposedProperties(dialogueContainerObject);
+            SaveCommentBlocks(dialogueContainerObject);
 
             if (!AssetDatabase.IsValidFolder("Assets/Resources"))
                 AssetDatabase.CreateFolder("Assets", "Resources");
@@ -76,6 +81,22 @@ namespace Subtegral.DialogueSystem.Editor
             dialogueContainer.ExposedProperties.AddRange(_graphView.ExposedProperties);
         }
 
+        private void SaveCommentBlocks(DialogueContainer dialogueContainer)
+        {
+            foreach (var block in CommentBlocks)
+            {
+                var nodes = block.containedElements.Where(x => x is DialogueNode).Cast<DialogueNode>().Select(x => x.GUID)
+                    .ToList();
+
+                dialogueContainer.CommentBlockData.Add(new CommentBlockData
+                {
+                    ChildNodes = nodes,
+                    Title = block.title,
+                    Position = block.GetPosition().position
+                });
+            }
+        }
+
         public void LoadNarrative(string fileName)
         {
             _dialogueContainer = Resources.Load<DialogueContainer>(fileName);
@@ -89,6 +110,7 @@ namespace Subtegral.DialogueSystem.Editor
             GenerateDialogueNodes();
             ConnectDialogueNodes();
             AddExposedProperties();
+            GenerateCommentBlocks();
         }
 
         /// <summary>
@@ -159,6 +181,21 @@ namespace Subtegral.DialogueSystem.Editor
             foreach (var exposedProperty in _dialogueContainer.ExposedProperties)
             {
                 _graphView.AddPropertyToBlackBoard(exposedProperty);
+            }
+        }
+
+        private void GenerateCommentBlocks()
+        {
+            foreach (var commentBlock in CommentBlocks)
+            {
+                _graphView.RemoveElement(commentBlock);
+            }
+
+            foreach (var commentBlockData in _dialogueContainer.CommentBlockData)
+            {
+               var block = _graphView.CreateCommentBlock(new Rect(commentBlockData.Position, _graphView.DefaultCommentBlockSize),
+                    commentBlockData);
+               block.AddElements(Nodes.Where(x=>commentBlockData.ChildNodes.Contains(x.GUID)));
             }
         }
     }

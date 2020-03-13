@@ -8,6 +8,8 @@ This is a node-based visual narrative flow creation tool that uses Unity's Graph
 - Dialogue&Graph save/load system.
 - Minimap for easy navigation.
 - Search window for node creation.
+- Blackboard and exposed property support.
+- Comment blocks for grouping nodes.
 - Backed by Unity's embedded GraphView api.
 - Sample provided in the package.
 

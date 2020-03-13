@@ -23,3 +23,6 @@ Node Links is a serialized class that holds node connection and *branching* data
 
 ## DialogueNodeData
 Dialogue Node Data is holding Dialogue Node's Dialogue Text and node's position data for graph.
+
+## ExposedProperty data class
+Exposed properties can hold **unique** property names and their non-unique values. You can set values via blackboard or set values at runtime with ```string.Replace(propertyName,runtimeValue);```

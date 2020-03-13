@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
@@ -29,11 +30,19 @@ namespace Subtegral.DialogueSystem.Editor
         {
             var tree = new List<SearchTreeEntry>
             {
-                new SearchTreeGroupEntry(new GUIContent("Create Node"), 0)
+                new SearchTreeGroupEntry(new GUIContent("Create Node"), 0),
+                new SearchTreeGroupEntry(new GUIContent("Dialogue"), 1),
+                new SearchTreeEntry(new GUIContent("Dialogue Node", _indentationIcon))
+                {
+                    level = 2, userData = new DialogueNode()
+                },
+                new SearchTreeEntry(new GUIContent("Comment Block",_indentationIcon))
+                {
+                    level = 1,
+                    userData = new Group()
+                }
             };
-            tree.Add(new SearchTreeGroupEntry(new GUIContent("Dialogue"),1));
-            tree.Add(new SearchTreeEntry(new GUIContent("Dialogue Node",_indentationIcon)){ level = 2,userData = new DialogueNode()});
-            
+
             return tree;
         }
 
@@ -47,6 +56,10 @@ namespace Subtegral.DialogueSystem.Editor
             {
                 case DialogueNode dialogueNode:
                     _graphView.CreateNewDialogueNode("Dialogue Node",graphMousePosition);
+                    return true;
+                case Group group:
+                    var rect = new Rect(graphMousePosition, _graphView.DefaultCommentBlockSize);
+                     _graphView.CreateCommentBlock(rect);
                     return true;
             }
             return false;

@@ -42,7 +42,22 @@ namespace Subtegral.DialogueSystem.Editor
             if (!AssetDatabase.IsValidFolder("Assets/Resources"))
                 AssetDatabase.CreateFolder("Assets", "Resources");
 
-            AssetDatabase.CreateAsset(dialogueContainerObject, $"Assets/Resources/{fileName}.asset");
+            UnityEngine.Object loadedAsset = AssetDatabase.LoadAssetAtPath($"Assets/Resources/{fileName}.asset", typeof(DialogueContainer));
+
+            if (loadedAsset == null || !AssetDatabase.Contains(loadedAsset)) 
+			{
+                AssetDatabase.CreateAsset(dialogueContainerObject, $"Assets/Resources/{fileName}.asset");
+            }
+            else 
+			{
+                DialogueContainer container = loadedAsset as DialogueContainer;
+                container.NodeLinks = dialogueContainerObject.NodeLinks;
+                container.DialogueNodeData = dialogueContainerObject.DialogueNodeData;
+                container.ExposedProperties = dialogueContainerObject.ExposedProperties;
+                container.CommentBlockData = dialogueContainerObject.CommentBlockData;
+                EditorUtility.SetDirty(container);
+            }
+
             AssetDatabase.SaveAssets();
         }
 

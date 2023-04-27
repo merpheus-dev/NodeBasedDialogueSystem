@@ -39,6 +39,7 @@ namespace Subtegral.DialogueSystem.Editor
                 return;
             
             SaveGraph(filePath);
+	    EditorUtility.RevealInFinder($"{filePath}");
         }
         
         public void SaveGraph(string filePath)
@@ -65,8 +66,6 @@ namespace Subtegral.DialogueSystem.Editor
             }
 
             AssetDatabase.SaveAssets();
-            // open file explorer to the folder where the file is saved
-            EditorUtility.RevealInFinder($"{filePath}");
         }
 
         private bool SaveNodes(DialogueContainer dialogueContainerObject)

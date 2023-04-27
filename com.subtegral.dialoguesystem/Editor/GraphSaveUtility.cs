@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -32,36 +32,39 @@ namespace Subtegral.DialogueSystem.Editor
             };
         }
 
-        public void SaveGraph(string fileName)
+        public void SaveGraph()
         {
             var dialogueContainerObject = ScriptableObject.CreateInstance<DialogueContainer>();
-            if (!SaveNodes(fileName, dialogueContainerObject)) return;
+            if (!SaveNodes(dialogueContainerObject))
+                return;
             SaveExposedProperties(dialogueContainerObject);
             SaveCommentBlocks(dialogueContainerObject);
+            
+            var filePath = EditorUtility.SaveFilePanelInProject("Save Narrative", "New Narrative", "asset", "Pick a save location");
+            if (string.IsNullOrEmpty(filePath))
+                return;
 
-            if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-                AssetDatabase.CreateFolder("Assets", "Resources");
+            var loadedAsset = AssetDatabase.LoadAssetAtPath($"{filePath}", typeof(DialogueContainer));
 
-            UnityEngine.Object loadedAsset = AssetDatabase.LoadAssetAtPath($"Assets/Resources/{fileName}.asset", typeof(DialogueContainer));
-
-            if (loadedAsset == null || !AssetDatabase.Contains(loadedAsset)) 
-			{
-                AssetDatabase.CreateAsset(dialogueContainerObject, $"Assets/Resources/{fileName}.asset");
-            }
-            else 
-			{
-                DialogueContainer container = loadedAsset as DialogueContainer;
-                container.NodeLinks = dialogueContainerObject.NodeLinks;
-                container.DialogueNodeData = dialogueContainerObject.DialogueNodeData;
-                container.ExposedProperties = dialogueContainerObject.ExposedProperties;
-                container.CommentBlockData = dialogueContainerObject.CommentBlockData;
-                EditorUtility.SetDirty(container);
+            if (loadedAsset == null || !AssetDatabase.Contains(loadedAsset)) {
+                AssetDatabase.CreateAsset(dialogueContainerObject, $"{filePath}");
+            } else {
+                var container = loadedAsset as DialogueContainer;
+                if (container != null) {
+                    container.nodeLinks         = dialogueContainerObject.nodeLinks;
+                    container.dialogueNodeData  = dialogueContainerObject.dialogueNodeData;
+                    container.exposedProperties = dialogueContainerObject.exposedProperties;
+                    container.commentBlockData  = dialogueContainerObject.commentBlockData;
+                    EditorUtility.SetDirty(container);
+                }
             }
 
             AssetDatabase.SaveAssets();
+            // open file explorer to the folder where the file is saved
+            EditorUtility.RevealInFinder($"{filePath}");
         }
 
-        private bool SaveNodes(string fileName, DialogueContainer dialogueContainerObject)
+        private bool SaveNodes(DialogueContainer dialogueContainerObject)
         {
             if (!Edges.Any()) return false;
             var connectedSockets = Edges.Where(x => x.input.node != null).ToArray();
@@ -111,12 +114,20 @@ namespace Subtegral.DialogueSystem.Editor
                 });
             }
         }
-
-        public void LoadNarrative(string fileName)
+	
+	public void LoadNarrative(out string fileName)
         {
+            fileName = String.Empty;
+            // open file explorer to get file path
+            var path = EditorUtility.OpenFilePanel("Load Narrative", Application.dataPath + "/Resources", "asset");
+            if (path.Length == 0)
+                return;
+            var startIndex   = path.IndexOf("Resources/", StringComparison.Ordinal) + 10;
+            var endIndex     = path.LastIndexOf(".asset", StringComparison.Ordinal);
+            fileName = path.Substring(startIndex, endIndex - startIndex);
+            
             _dialogueContainer = Resources.Load<DialogueContainer>(fileName);
-            if (_dialogueContainer == null)
-            {
+            if (_dialogueContainer == null) {
                 EditorUtility.DisplayDialog("File Not Found", "Target Narrative Data does not exist!", "OK");
                 return;
             }

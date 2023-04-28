@@ -44,11 +44,13 @@ namespace Subtegral.DialogueSystem.Editor
         private void GenerateToolbar()
         {
             var toolbar           = new Toolbar();
-            toolbar.Add(new Button(() => RequestDataOperation(0)) {text  = "New Data"});
-            toolbar.Add(new Button(() => RequestDataOperation(1)) {text  = "Save Data"});
-            toolbar.Add(new Button(() => RequestDataOperation(2)) {text = "Load Data"});
-            var fileNameTextField = new Label($"File Name: {_fileName}");
-            toolbar.Add(fileNameTextField);
+            toolbar.Add(new Button(() => RequestDataOperation(0)) {text  = "New"});
+            toolbar.Add(new Button(() => RequestDataOperation(1)) {text  = "Save"});
+            toolbar.Add(new Button(() => RequestDataOperation(2)) {text = "Load"});
+            if (_fileName != string.Empty) {
+                var fileNameTextField = new Label($"File Name: {_fileName}");
+                toolbar.Add(fileNameTextField);
+            }
             rootVisualElement.Add(toolbar);
         }
 
@@ -71,10 +73,12 @@ namespace Subtegral.DialogueSystem.Editor
                 {
                     if (_filePath != string.Empty) {
                         saveUtility.SaveGraph(_filePath);
-                        Debug.Log($"Saved Narrative at: {_filePath}");
-                        break;
-                    }
-                    saveUtility.SaveGraph();
+                    } else saveUtility.SaveGraph(out _filePath);
+                    
+                    Debug.Log($"Saved Narrative at: {_filePath}");
+                    _fileName = _filePath.Split('/').Last();
+                    _fileName = _fileName[..^6];
+                    RegenerateToolbar();
                     break;
                 }
                 case 2:

@@ -32,14 +32,16 @@ namespace Subtegral.DialogueSystem.Editor
             };
         }
 
-        public void SaveGraph()
+        public void SaveGraph() => SaveGraph(out _);
+
+        public void SaveGraph(out string filePath)
         {
-            var filePath = EditorUtility.SaveFilePanelInProject("Save Narrative", "New Narrative", "asset", "Pick a save location");
+            filePath = EditorUtility.SaveFilePanelInProject("Save Narrative", "New Narrative", "asset", "Pick a save location");
             if (string.IsNullOrEmpty(filePath))
                 return;
-            
+
             SaveGraph(filePath);
-	    EditorUtility.RevealInFinder($"{filePath}");
+            EditorUtility.RevealInFinder($"{filePath}");
         }
         
         public void SaveGraph(string filePath)

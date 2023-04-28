@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -32,36 +32,45 @@ namespace Subtegral.DialogueSystem.Editor
             };
         }
 
-        public void SaveGraph(string fileName)
+        public void SaveGraph() => SaveGraph(out _);
+
+        public void SaveGraph(out string filePath)
+        {
+            filePath = EditorUtility.SaveFilePanelInProject("Save Narrative", "New Narrative", "asset", "Pick a save location");
+            if (string.IsNullOrEmpty(filePath))
+                return;
+
+            SaveGraph(filePath);
+            EditorUtility.RevealInFinder($"{filePath}");
+        }
+        
+        public void SaveGraph(string filePath)
         {
             var dialogueContainerObject = ScriptableObject.CreateInstance<DialogueContainer>();
-            if (!SaveNodes(fileName, dialogueContainerObject)) return;
+            if (!SaveNodes(dialogueContainerObject))
+                return;
             SaveExposedProperties(dialogueContainerObject);
             SaveCommentBlocks(dialogueContainerObject);
 
-            if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-                AssetDatabase.CreateFolder("Assets", "Resources");
+            var loadedAsset = AssetDatabase.LoadAssetAtPath($"{filePath}", typeof(DialogueContainer));
 
-            UnityEngine.Object loadedAsset = AssetDatabase.LoadAssetAtPath($"Assets/Resources/{fileName}.asset", typeof(DialogueContainer));
-
-            if (loadedAsset == null || !AssetDatabase.Contains(loadedAsset)) 
-			{
-                AssetDatabase.CreateAsset(dialogueContainerObject, $"Assets/Resources/{fileName}.asset");
-            }
-            else 
-			{
-                DialogueContainer container = loadedAsset as DialogueContainer;
-                container.NodeLinks = dialogueContainerObject.NodeLinks;
-                container.DialogueNodeData = dialogueContainerObject.DialogueNodeData;
-                container.ExposedProperties = dialogueContainerObject.ExposedProperties;
-                container.CommentBlockData = dialogueContainerObject.CommentBlockData;
-                EditorUtility.SetDirty(container);
+            if (loadedAsset == null || !AssetDatabase.Contains(loadedAsset)) {
+                AssetDatabase.CreateAsset(dialogueContainerObject, $"{filePath}");
+            } else {
+                var container = loadedAsset as DialogueContainer;
+                if (container != null) {
+                    container.NodeLinks         = dialogueContainerObject.NodeLinks;
+                    container.DialogueNodeData  = dialogueContainerObject.DialogueNodeData;
+                    container.ExposedProperties = dialogueContainerObject.ExposedProperties;
+                    container.CommentBlockData  = dialogueContainerObject.CommentBlockData;
+                    EditorUtility.SetDirty(container);
+                }
             }
 
             AssetDatabase.SaveAssets();
         }
 
-        private bool SaveNodes(string fileName, DialogueContainer dialogueContainerObject)
+        private bool SaveNodes(DialogueContainer dialogueContainerObject)
         {
             if (!Edges.Any()) return false;
             var connectedSockets = Edges.Where(x => x.input.node != null).ToArray();
@@ -111,15 +120,22 @@ namespace Subtegral.DialogueSystem.Editor
                 });
             }
         }
-
-        public void LoadNarrative(string fileName)
+	
+	    public void LoadNarrative(out string filePath, out string fileName)
         {
-            _dialogueContainer = Resources.Load<DialogueContainer>(fileName);
-            if (_dialogueContainer == null)
-            {
-                EditorUtility.DisplayDialog("File Not Found", "Target Narrative Data does not exist!", "OK");
+            fileName = String.Empty;
+            // open file explorer to get file path
+            filePath = EditorUtility.OpenFilePanel("Load Narrative", Application.dataPath + "/Resources", "asset");
+            if (filePath.Length == 0)
                 return;
-            }
+            // reduce the file path to only include the path to the file from the Application.dataPath folder
+            filePath = filePath.Replace(Application.dataPath, "Assets");
+            // find the last / in the file path and get the file name
+            var startIndex = filePath.LastIndexOf("/", StringComparison.Ordinal) + 1;
+            var endIndex = filePath.LastIndexOf(".asset", StringComparison.Ordinal);
+            fileName = filePath.Substring(startIndex, endIndex - startIndex);
+            // shorten the file path to only include the path to the file from the Assets folder
+            _dialogueContainer = AssetDatabase.LoadAssetAtPath<DialogueContainer>(filePath);
 
             ClearGraph();
             GenerateDialogueNodes();
